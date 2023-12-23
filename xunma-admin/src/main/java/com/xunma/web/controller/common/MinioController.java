@@ -13,7 +13,7 @@ import java.util.List;
 public class MinioController {
  
     @Autowired
-    MinioConfig minioConfig;
+    private MinioConfig minioConfig;
  
     // 上传
     @PostMapping("/upload")

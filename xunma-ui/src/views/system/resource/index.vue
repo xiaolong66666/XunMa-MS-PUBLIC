@@ -1,32 +1,31 @@
 <template>
   <div class="app-container">
     <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="名称" prop="name">
+      <el-form-item label="订单编号" prop="orderId">
+        <el-input
+          v-model="queryParams.orderId"
+          placeholder="请输入订单编号"
+          clearable
+          @keyup.enter.native="handleQuery"
+        />
+      </el-form-item>
+      <el-form-item label="资源名称" prop="name">
         <el-input
           v-model="queryParams.name"
-          placeholder="请输入名称"
+          placeholder="请输入资源名称"
           clearable
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="创建时间">
-        <el-date-picker
-          v-model="daterangeCreateTime"
-          style="width: 240px"
-          value-format="yyyy-MM-dd"
-          type="daterange"
-          range-separator="-"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-        ></el-date-picker>
-      </el-form-item>
-      <el-form-item label="创建人" prop="createBy">
-        <el-input
-          v-model="queryParams.createBy"
-          placeholder="请输入创建人"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
+      <el-form-item label="资源类型" prop="type">
+        <el-select v-model="queryParams.type" placeholder="请选择资源类型" clearable>
+          <el-option
+            v-for="dict in dict.type.xm_resource_type"
+            :key="dict.value"
+            :label="dict.label"
+            :value="dict.value"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
@@ -42,7 +41,7 @@
           icon="el-icon-plus"
           size="mini"
           @click="handleAdd"
-          v-hasPermi="['system:type:add']"
+          v-hasPermi="['system:resource:add']"
         >新增</el-button>
       </el-col>
       <el-col :span="1.5">
@@ -53,7 +52,7 @@
           size="mini"
           :disabled="single"
           @click="handleUpdate"
-          v-hasPermi="['system:type:edit']"
+          v-hasPermi="['system:resource:edit']"
         >修改</el-button>
       </el-col>
       <el-col :span="1.5">
@@ -64,7 +63,7 @@
           size="mini"
           :disabled="multiple"
           @click="handleDelete"
-          v-hasPermi="['system:type:remove']"
+          v-hasPermi="['system:resource:remove']"
         >删除</el-button>
       </el-col>
       <el-col :span="1.5">
@@ -74,16 +73,27 @@
           icon="el-icon-download"
           size="mini"
           @click="handleExport"
-          v-hasPermi="['system:type:export']"
+          v-hasPermi="['system:resource:export']"
         >导出</el-button>
       </el-col>
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
-    <el-table v-loading="loading" :data="typeList" @selection-change="handleSelectionChange">
+    <el-table v-loading="loading" :data="resourceList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="编号" align="center" prop="id" />
-      <el-table-column label="名称" align="center" prop="name" />
+      <el-table-column label="资源编号" align="center" prop="id" />
+      <el-table-column label="订单编号" align="center" prop="orderId" />
+      <el-table-column label="资源名称" align="center" prop="name" />
+      <el-table-column label="资源类型" align="center" prop="type">
+        <template slot-scope="scope">
+          <dict-tag :options="dict.type.xm_resource_type" :value="scope.row.type"/>
+        </template>
+      </el-table-column>
+      <el-table-column label="资源地址" align="center" prop="url" width="100">
+        <template slot-scope="scope">
+          <image-preview :src="scope.row.url" :width="50" :height="50"/>
+        </template>
+      </el-table-column>
       <el-table-column label="创建时间" align="center" prop="createTime" width="180">
         <template slot-scope="scope">
           <span>{{ parseTime(scope.row.createTime, '{y}-{m}-{d}') }}</span>
@@ -97,14 +107,14 @@
             type="text"
             icon="el-icon-edit"
             @click="handleUpdate(scope.row)"
-            v-hasPermi="['system:type:edit']"
+            v-hasPermi="['system:resource:edit']"
           >修改</el-button>
           <el-button
             size="mini"
             type="text"
             icon="el-icon-delete"
             @click="handleDelete(scope.row)"
-            v-hasPermi="['system:type:remove']"
+            v-hasPermi="['system:resource:remove']"
           >删除</el-button>
         </template>
       </el-table-column>
@@ -118,11 +128,27 @@
       @pagination="getList"
     />
 
-    <!-- 添加或修改订单类型对话框 -->
+    <!-- 添加或修改资源管理对话框 -->
     <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body>
       <el-form ref="form" :model="form" :rules="rules" label-width="80px">
-        <el-form-item label="名称" prop="name">
-          <el-input v-model="form.name" placeholder="请输入名称" />
+        <el-form-item label="订单编号" prop="orderId">
+          <el-input v-model="form.orderId" placeholder="请输入订单编号" />
+        </el-form-item>
+        <el-form-item label="资源名称" prop="name">
+          <el-input v-model="form.name" placeholder="请输入资源名称" />
+        </el-form-item>
+        <el-form-item label="资源类型" prop="type">
+          <el-select v-model="form.type" placeholder="请选择资源类型">
+            <el-option
+              v-for="dict in dict.type.xm_resource_type"
+              :key="dict.value"
+              :label="dict.label"
+              :value="dict.value"
+            ></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="资源地址" prop="url">
+          <image-upload v-model="form.url"/>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -134,10 +160,11 @@
 </template>
 
 <script>
-import { listType, getType, delType, addType, updateType } from "@/api/system/type";
+import { listResource, getResource, delResource, addResource, updateResource } from "@/api/system/resource";
 
 export default {
-  name: "Type",
+  name: "Resource",
+  dicts: ['xm_resource_type'],
   data() {
     return {
       // 遮罩层
@@ -152,28 +179,37 @@ export default {
       showSearch: true,
       // 总条数
       total: 0,
-      // 订单类型表格数据
-      typeList: [],
+      // 资源管理表格数据
+      resourceList: [],
       // 弹出层标题
       title: "",
       // 是否显示弹出层
       open: false,
-      // 名称时间范围
+      // 资源地址时间范围
       daterangeCreateTime: [],
       // 查询参数
       queryParams: {
         pageNum: 1,
         pageSize: 10,
+        orderId: null,
         name: null,
-        createTime: null,
-        createBy: null,
+        type: null,
       },
       // 表单参数
       form: {},
       // 表单校验
       rules: {
+        orderId: [
+          { required: true, message: "订单编号不能为空", trigger: "blur" }
+        ],
         name: [
-          { required: true, message: "名称不能为空", trigger: "blur" }
+          { required: true, message: "资源名称不能为空", trigger: "blur" }
+        ],
+        type: [
+          { required: true, message: "资源类型不能为空", trigger: "change" }
+        ],
+        url: [
+          { required: true, message: "资源地址不能为空", trigger: "blur" }
         ],
         createTime: [
           { required: true, message: "创建时间不能为空", trigger: "blur" }
@@ -194,7 +230,7 @@ export default {
     this.getList();
   },
   methods: {
-    /** 查询订单类型列表 */
+    /** 查询资源管理列表 */
     getList() {
       this.loading = true;
       this.queryParams.params = {};
@@ -202,8 +238,8 @@ export default {
         this.queryParams.params["beginCreateTime"] = this.daterangeCreateTime[0];
         this.queryParams.params["endCreateTime"] = this.daterangeCreateTime[1];
       }
-      listType(this.queryParams).then(response => {
-        this.typeList = response.rows;
+      listResource(this.queryParams).then(response => {
+        this.resourceList = response.rows;
         this.total = response.total;
         this.loading = false;
       });
@@ -217,7 +253,10 @@ export default {
     reset() {
       this.form = {
         id: null,
+        orderId: null,
         name: null,
+        type: null,
+        url: null,
         createTime: null,
         updateTime: null,
         createBy: null,
@@ -246,16 +285,16 @@ export default {
     handleAdd() {
       this.reset();
       this.open = true;
-      this.title = "添加订单类型";
+      this.title = "添加资源管理";
     },
     /** 修改按钮操作 */
     handleUpdate(row) {
       this.reset();
       const id = row.id || this.ids
-      getType(id).then(response => {
+      getResource(id).then(response => {
         this.form = response.data;
         this.open = true;
-        this.title = "修改订单类型";
+        this.title = "修改资源管理";
       });
     },
     /** 提交按钮 */
@@ -263,13 +302,13 @@ export default {
       this.$refs["form"].validate(valid => {
         if (valid) {
           if (this.form.id != null) {
-            updateType(this.form).then(response => {
+            updateResource(this.form).then(response => {
               this.$modal.msgSuccess("修改成功");
               this.open = false;
               this.getList();
             });
           } else {
-            addType(this.form).then(response => {
+            addResource(this.form).then(response => {
               this.$modal.msgSuccess("新增成功");
               this.open = false;
               this.getList();
@@ -281,8 +320,8 @@ export default {
     /** 删除按钮操作 */
     handleDelete(row) {
       const ids = row.id || this.ids;
-      this.$modal.confirm('是否确认删除订单类型编号为"' + ids + '"的数据项？').then(function() {
-        return delType(ids);
+      this.$modal.confirm('是否确认删除资源管理编号为"' + ids + '"的数据项？').then(function() {
+        return delResource(ids);
       }).then(() => {
         this.getList();
         this.$modal.msgSuccess("删除成功");
@@ -290,9 +329,9 @@ export default {
     },
     /** 导出按钮操作 */
     handleExport() {
-      this.download('system/type/export', {
+      this.download('system/resource/export', {
         ...this.queryParams
-      }, `type_${new Date().getTime()}.xlsx`)
+      }, `resource_${new Date().getTime()}.xlsx`)
     }
   }
 };

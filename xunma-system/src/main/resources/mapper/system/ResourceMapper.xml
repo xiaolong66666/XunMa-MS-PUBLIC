@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xunma.system.mapper.ResourceMapper">
+    
+    <resultMap type="Resource" id="ResourceResult">
+        <result property="id"    column="id"    />
+        <result property="orderId"    column="order_id"    />
+        <result property="name"    column="name"    />
+        <result property="type"    column="type"    />
+        <result property="url"    column="url"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="updateBy"    column="update_by"    />
+    </resultMap>
+
+    <sql id="selectResourceVo">
+        select id, order_id, name, type, url, create_time, update_time, create_by, update_by from resource
+    </sql>
+
+    <select id="selectResourceList" parameterType="Resource" resultMap="ResourceResult">
+        <include refid="selectResourceVo"/>
+        <where>  
+            <if test="orderId != null "> and order_id = #{orderId}</if>
+            <if test="name != null  and name != ''"> and name like concat('%', #{name}, '%')</if>
+            <if test="type != null  and type != ''"> and type = #{type}</if>
+        </where>
+    </select>
+    
+    <select id="selectResourceById" parameterType="Long" resultMap="ResourceResult">
+        <include refid="selectResourceVo"/>
+        where id = #{id}
+    </select>
+        
+    <insert id="insertResource" parameterType="Resource" useGeneratedKeys="true" keyProperty="id">
+        insert into resource
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="orderId != null">order_id,</if>
+            <if test="name != null and name != ''">name,</if>
+            <if test="type != null and type != ''">type,</if>
+            <if test="url != null and url != ''">url,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="createBy != null and createBy != ''">create_by,</if>
+            <if test="updateBy != null and updateBy != ''">update_by,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="orderId != null">#{orderId},</if>
+            <if test="name != null and name != ''">#{name},</if>
+            <if test="type != null and type != ''">#{type},</if>
+            <if test="url != null and url != ''">#{url},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="createBy != null and createBy != ''">#{createBy},</if>
+            <if test="updateBy != null and updateBy != ''">#{updateBy},</if>
+         </trim>
+    </insert>
+
+    <update id="updateResource" parameterType="Resource">
+        update resource
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="orderId != null">order_id = #{orderId},</if>
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="type != null and type != ''">type = #{type},</if>
+            <if test="url != null and url != ''">url = #{url},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="createBy != null and createBy != ''">create_by = #{createBy},</if>
+            <if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteResourceById" parameterType="Long">
+        delete from resource where id = #{id}
+    </delete>
+
+    <delete id="deleteResourceByIds" parameterType="String">
+        delete from resource where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>
