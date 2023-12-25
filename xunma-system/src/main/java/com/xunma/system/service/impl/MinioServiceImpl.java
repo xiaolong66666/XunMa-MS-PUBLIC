@@ -1,5 +1,8 @@
-package com.xunma.common.utils.minio;
+package com.xunma.system.service.impl;
 
+import com.xunma.common.core.domain.AjaxResult;
+import com.xunma.common.utils.minio.MinioUtils;
+import com.xunma.system.domain.Resource;
 import io.minio.MinioClient;
 import io.minio.ObjectStat;
 import io.minio.PutObjectOptions;
@@ -15,16 +18,13 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriUtils;
  
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
- 
- 
 @Component
-public class MinioConfig implements InitializingBean {
+public class MinioServiceImpl implements InitializingBean {
  
     @Value(value = "${minio.bucket}")
     private String bucket;
@@ -56,21 +56,33 @@ public class MinioConfig implements InitializingBean {
     /**
      * 上传
      */
-    public String putObject(MultipartFile multipartFile) throws Exception {
+    public AjaxResult putObject(MultipartFile multipartFile) throws Exception {
         // bucket 不存在，创建
         if (!minioClient.bucketExists(this.bucket)) {
             minioClient.makeBucket(this.bucket);
         }
         try (InputStream inputStream = multipartFile.getInputStream()) {
+            if (multipartFile.isEmpty() || !multipartFile.getOriginalFilename().contains(".")){
+                return AjaxResult.error("文件为空或文件名不合法");
+            }
             // 上传文件的名称
-            String fileName = multipartFile.getOriginalFilename();
+            String[] split = multipartFile.getOriginalFilename().split("\\.");
+            //防止filename重复
+            String suffix = split[1];
+            String original_file = split[0];
+            String fileName = original_file+System.currentTimeMillis()+"."+suffix;
             // PutObjectOptions，上传配置(文件大小，内存中文件分片大小)
             PutObjectOptions putObjectOptions = new PutObjectOptions(multipartFile.getSize(), PutObjectOptions.MIN_MULTIPART_SIZE);
             // 文件的ContentType
             putObjectOptions.setContentType(multipartFile.getContentType());
             minioClient.putObject(this.bucket, fileName, inputStream, putObjectOptions);
             // 返回访问路径
-            return this.url + UriUtils.encode(fileName, StandardCharsets.UTF_8);
+            String file_url = this.url + UriUtils.encode(fileName, StandardCharsets.UTF_8);
+            Resource resource = new Resource();
+            resource.setName(fileName);
+            resource.setUrl(file_url);
+            resource.setType(MinioUtils.getMinioBucketName(suffix));
+            return AjaxResult.success(resource);
         }
     }
  

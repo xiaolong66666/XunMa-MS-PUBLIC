@@ -1,5 +1,5 @@
 package com.xunma.web.controller.common;
-import com.xunma.common.utils.minio.MinioConfig;
+import com.xunma.system.service.impl.MinioServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -9,11 +9,11 @@ import java.util.List;
  
 @RestController
 @CrossOrigin
-@RequestMapping("/test")
+@RequestMapping("/xunma/file")
 public class MinioController {
  
     @Autowired
-    private MinioConfig minioConfig;
+    private MinioServiceImpl minioConfig;
  
     // 上传
     @PostMapping("/upload")
