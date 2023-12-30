@@ -120,8 +120,7 @@ swagger:
   pathMapping: /dev-api
 
 minio:
-  host: http://192.168.92.222:9000
-  url: ${minio.host}/${minio.bucket}/
+  host: http://192.168.92.222:9000/
   access-key: admin
   secret-key: 12345678
   bucket: general

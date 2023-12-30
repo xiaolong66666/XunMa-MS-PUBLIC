@@ -89,14 +89,15 @@
           <dict-tag :options="dict.type.xm_resource_type" :value="scope.row.type"/>
         </template>
       </el-table-column>
-      <el-table-column label="资源地址" align="center" prop="url" width="100">
+      <el-table-column label="具体资源" align="center" prop="url" width="100">
         <template slot-scope="scope">
-          <image-preview :src="scope.row.url" :width="50" :height="50"/>
+          <image-preview v-if="scope.row.type == 0" :src="scope.row.url" :width="50" :height="50"/>
+          <el-link v-else type="primary" :href="scope.row.url">点击查看</el-link>
         </template>
       </el-table-column>
       <el-table-column label="创建时间" align="center" prop="createTime" width="180">
         <template slot-scope="scope">
-          <span>{{ parseTime(scope.row.createTime, '{y}-{m}-{d}') }}</span>
+          <span>{{ parseTime(scope.row.createTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
         </template>
       </el-table-column>
       <el-table-column label="创建人" align="center" prop="createBy" />
@@ -119,7 +120,7 @@
         </template>
       </el-table-column>
     </el-table>
-    
+
     <pagination
       v-show="total>0"
       :total="total"
@@ -132,24 +133,55 @@
     <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body>
       <el-form ref="form" :model="form" :rules="rules" label-width="80px">
         <el-form-item label="订单编号" prop="orderId">
-          <el-input v-model="form.orderId" placeholder="请输入订单编号" />
+          <el-input :disabled="disabled" v-model="form.orderId" placeholder="请输入订单编号" />
         </el-form-item>
         <el-form-item label="资源名称" prop="name">
           <el-input v-model="form.name" placeholder="请输入资源名称" />
         </el-form-item>
-        <el-form-item label="资源类型" prop="type">
-          <el-select v-model="form.type" placeholder="请选择资源类型">
-            <el-option
-              v-for="dict in dict.type.xm_resource_type"
-              :key="dict.value"
-              :label="dict.label"
-              :value="dict.value"
-            ></el-option>
-          </el-select>
+        <el-form-item label="上传资源" prop="url">
+          <div class="upload-file">
+            <el-upload
+              multiple
+              :action="uploadFileUrl"
+              :before-upload="handleBeforeUpload"
+              :file-list="fileList"
+              :limit="limit"
+              :on-error="handleUploadError"
+              :on-exceed="handleExceed"
+              :on-success="handleUploadSuccess"
+              :show-file-list="false"
+              :headers="headers"
+              class="upload-file-uploader"
+              ref="fileUpload"
+            >
+              <!-- 上传按钮 -->
+              <el-button size="mini" type="primary">选取文件</el-button>
+              <!-- 上传提示 -->
+              <div class="el-upload__tip" slot="tip" v-if="showTip">
+                请上传
+                <template v-if="fileSize"> 大小不超过 <b style="color: #f56c6c">{{ fileSize }}MB</b> </template>
+                <template v-if="fileType"> 格式为 <b style="color: #f56c6c">{{ fileType.join("/") }}</b> </template>
+                的文件
+              </div>
+            </el-upload>
+
+            <!-- 文件列表 -->
+            <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear" tag="ul">
+              <li :key="file.url" class="el-upload-list__item ele-upload-list__item-content" v-for="(file, index) in fileList">
+                <el-link :href="`${baseUrl}${file.url}`" :underline="false" target="_blank">
+                  <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
+                </el-link>
+                <div class="ele-upload-list__item-content-action">
+                  <el-link :underline="false" @click="handleDeleteFile(index)" type="danger">删除</el-link>
+                </div>
+              </li>
+            </transition-group>
+          </div>
+<!--          <file-upload v-model="form.url"/>-->
         </el-form-item>
-        <el-form-item label="资源地址" prop="url">
-          <image-upload v-model="form.url"/>
-        </el-form-item>
+<!--        <el-form-item label="资源地址" prop="url">-->
+<!--          <image-upload v-model="form.url"/>-->
+<!--        </el-form-item>-->
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button type="primary" @click="submitForm">确 定</el-button>
@@ -161,12 +193,50 @@
 
 <script>
 import { listResource, getResource, delResource, addResource, updateResource } from "@/api/system/resource";
+import { getToken } from "@/utils/auth";
 
 export default {
+  // file
+  props: {
+    // 值
+    value: [String, Object, Array],
+    // 数量限制
+    limit: {
+      type: Number,
+      default: 1,
+    },
+    // 大小限制(MB)
+    fileSize: {
+      type: Number,
+      default: 200,
+    },
+    // 文件类型, 例如['png', 'jpg', 'jpeg']
+    fileType: {
+      type: Array,
+      default: () => ["doc", "xls", "ppt", "txt", "pdf","png", "jpg", "jpeg","zip","rar"],
+    },
+    // 是否显示提示
+    isShowTip: {
+      type: Boolean,
+      default: true
+    },
+  },
+  //--
   name: "Resource",
   dicts: ['xm_resource_type'],
   data() {
     return {
+      //uploadfile
+      number: 0,
+      uploadList: [],
+      baseUrl: process.env.VUE_APP_BASE_API,
+      uploadFileUrl: process.env.VUE_APP_BASE_API + "/xunma/minio/upload", // 上传文件服务器地址
+      headers: {
+        Authorization: "Bearer " + getToken(),
+      },
+      fileList: [],
+      //禁止编辑订单编号
+      disabled: false,
       // 遮罩层
       loading: true,
       // 选中数组
@@ -199,33 +269,45 @@ export default {
       form: {},
       // 表单校验
       rules: {
+        url: [
+          { required: true, message: "资源不能为空", trigger: "blur" }
+        ],
         orderId: [
           { required: true, message: "订单编号不能为空", trigger: "blur" }
-        ],
-        name: [
-          { required: true, message: "资源名称不能为空", trigger: "blur" }
-        ],
-        type: [
-          { required: true, message: "资源类型不能为空", trigger: "change" }
-        ],
-        url: [
-          { required: true, message: "资源地址不能为空", trigger: "blur" }
-        ],
-        createTime: [
-          { required: true, message: "创建时间不能为空", trigger: "blur" }
-        ],
-        updateTime: [
-          { required: true, message: "更新时间不能为空", trigger: "blur" }
-        ],
-        createBy: [
-          { required: true, message: "创建人不能为空", trigger: "blur" }
-        ],
-        updateBy: [
-          { required: true, message: "更新人不能为空", trigger: "blur" }
         ]
       }
     };
   },
+    watch: {
+      value: {
+        handler(val) {
+          if (val) {
+            let temp = 1;
+            // 首先将值转为数组
+            const list = Array.isArray(val) ? val : this.value.split(',');
+            // 然后将数组转为对象数组
+            this.fileList = list.map(item => {
+              if (typeof item === "string") {
+                item = { name: item, url: item };
+              }
+              item.uid = item.uid || new Date().getTime() + temp++;
+              return item;
+            });
+          } else {
+            this.fileList = [];
+            return [];
+          }
+        },
+        deep: true,
+        immediate: true
+      }
+    },
+    computed: {
+      // 是否显示提示
+      showTip() {
+        return this.isShowTip && (this.fileType || this.fileSize);
+      },
+    },
   created() {
     this.getList();
   },
@@ -251,6 +333,8 @@ export default {
     },
     // 表单重置
     reset() {
+      this.fileList=[];
+      this.disabled = false;
       this.form = {
         id: null,
         orderId: null,
@@ -293,8 +377,13 @@ export default {
       const id = row.id || this.ids
       getResource(id).then(response => {
         this.form = response.data;
+        this.fileList = [{
+          name: response.data.url,
+          url: response.data.url
+        }]
         this.open = true;
         this.title = "修改资源管理";
+        this.disabled= true;
       });
     },
     /** 提交按钮 */
@@ -332,7 +421,109 @@ export default {
       this.download('system/resource/export', {
         ...this.queryParams
       }, `resource_${new Date().getTime()}.xlsx`)
+    },
+    // 上传前校检格式和大小
+    handleBeforeUpload(file) {
+      // 校检文件类型
+      if (this.fileType) {
+        const fileName = file.name.split('.');
+        const fileExt = fileName[fileName.length - 1];
+        const isTypeOk = this.fileType.indexOf(fileExt) >= 0;
+        if (!isTypeOk) {
+          this.$modal.msgError(`文件格式不正确, 请上传${this.fileType.join("/")}格式文件!`);
+          return false;
+        }
+      }
+      // 校检文件大小
+      if (this.fileSize) {
+        const isLt = file.size / 1024 / 1024 < this.fileSize;
+        if (!isLt) {
+          this.$modal.msgError(`上传文件大小不能超过 ${this.fileSize} MB!`);
+          return false;
+        }
+      }
+      this.$modal.loading("正在上传文件，请稍候...");
+      this.number++;
+      return true;
+    },
+    // 文件个数超出
+    handleExceed() {
+      this.$modal.msgError(`上传文件数量不能超过 ${this.limit} 个!`);
+    },
+    // 上传失败
+    handleUploadError(err) {
+      this.$modal.msgError("上传文件失败，请重试");
+      this.$modal.closeLoading();
+    },
+    // 上传成功回调
+    handleUploadSuccess(res, file) {
+      if (res.code === 200) {
+        this.uploadList.push({ name: res.data.url, url: res.data.url });
+        this.uploadedSuccessfully();
+      } else {
+        this.number--;
+        this.$modal.closeLoading();
+        this.$modal.msgError(res.msg);
+        this.$refs.fileUpload.handleRemove(file);
+        this.uploadedSuccessfully();
+      }
+    },
+    // 删除文件
+    handleDeleteFile(index) {
+      this.fileList.splice(index, 1);
+      this.$emit("input", this.listToString(this.fileList));
+      this.form.name = "";
+    },
+    // 上传结束处理
+    uploadedSuccessfully() {
+      if (this.number > 0 && this.uploadList.length === this.number) {
+        this.fileList = this.fileList.concat(this.uploadList);
+        this.uploadList = [];
+        this.number = 0;
+        this.$emit("input", this.listToString(this.fileList));
+        this.$modal.closeLoading();
+        this.form.url = this.listToString(this.fileList);
+        this.form.name = this.getFileName(this.form.url);
+      }
+    },
+    // 获取文件名称
+    getFileName(name) {
+      // 如果是url那么取最后的名字 如果不是直接返回
+      if (name.lastIndexOf("/") > -1) {
+        return name.slice(name.lastIndexOf("/") + 1);
+      } else {
+        return name;
+      }
+    },
+    // 对象转成指定字符串分隔
+    listToString(list, separator) {
+      let strs = "";
+      separator = separator || ",";
+      for (let i in list) {
+        strs += list[i].url + separator;
+      }
+      return strs != '' ? strs.substr(0, strs.length - 1) : '';
     }
   }
 };
 </script>
+<style scoped lang="scss">
+.upload-file-uploader {
+  margin-bottom: 5px;
+}
+.upload-file-list .el-upload-list__item {
+  border: 1px solid #e4e7ed;
+  line-height: 2;
+  margin-bottom: 10px;
+  position: relative;
+}
+.upload-file-list .ele-upload-list__item-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: inherit;
+}
+.ele-upload-list__item-content-action .el-link {
+  margin-right: 10px;
+}
+</style>

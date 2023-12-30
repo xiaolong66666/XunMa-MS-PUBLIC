@@ -1,6 +1,8 @@
 package com.xunma.system.service;
 
 import java.util.List;
+
+import com.xunma.common.core.domain.AjaxResult;
 import com.xunma.system.domain.Resource;
 
 /**
@@ -33,7 +35,7 @@ public interface IResourceService
      * @param resource 资源管理
      * @return 结果
      */
-    public int insertResource(Resource resource);
+    public AjaxResult insertResource(Resource resource);
 
     /**
      * 修改资源管理

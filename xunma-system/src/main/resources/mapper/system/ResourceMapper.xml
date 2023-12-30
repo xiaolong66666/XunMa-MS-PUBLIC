@@ -61,13 +61,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <update id="updateResource" parameterType="Resource">
         update resource
         <trim prefix="SET" suffixOverrides=",">
-            <if test="orderId != null">order_id = #{orderId},</if>
             <if test="name != null and name != ''">name = #{name},</if>
             <if test="type != null and type != ''">type = #{type},</if>
             <if test="url != null and url != ''">url = #{url},</if>
-            <if test="createTime != null">create_time = #{createTime},</if>
             <if test="updateTime != null">update_time = #{updateTime},</if>
-            <if test="createBy != null and createBy != ''">create_by = #{createBy},</if>
             <if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
         </trim>
         where id = #{id}
@@ -83,4 +80,5 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             #{id}
         </foreach>
     </delete>
+
 </mapper>

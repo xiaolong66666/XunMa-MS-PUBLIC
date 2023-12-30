@@ -1,6 +1,7 @@
 package com.xunma.system.service.impl;
 
 import com.xunma.common.core.domain.AjaxResult;
+import com.xunma.common.utils.file.FileUtils;
 import com.xunma.common.utils.minio.MinioUtils;
 import com.xunma.system.domain.Resource;
 import io.minio.MinioClient;
@@ -26,14 +27,11 @@ import java.util.List;
 @Component
 public class MinioServiceImpl implements InitializingBean {
  
-    @Value(value = "${minio.bucket}")
-    private String bucket;
+//    @Value(value = "${minio.bucket}")
+//    private String bucket;
  
     @Value(value = "${minio.host}")
     private String host;
- 
-    @Value(value = "${minio.url}")
-    private String url;
  
     @Value(value = "${minio.access-key}")
     private String accessKey;
@@ -45,7 +43,7 @@ public class MinioServiceImpl implements InitializingBean {
  
     @Override
     public void afterPropertiesSet() throws Exception {
-        Assert.hasText(url, "Minio url 为空");
+        Assert.hasText(host, "Minio url 为空");
         Assert.hasText(accessKey, "Minio accessKey为空");
         Assert.hasText(secretKey, "Minio secretKey为空");
         this.minioClient = new MinioClient(this.host, this.accessKey, this.secretKey);
@@ -57,10 +55,6 @@ public class MinioServiceImpl implements InitializingBean {
      * 上传
      */
     public AjaxResult putObject(MultipartFile multipartFile) throws Exception {
-        // bucket 不存在，创建
-        if (!minioClient.bucketExists(this.bucket)) {
-            minioClient.makeBucket(this.bucket);
-        }
         try (InputStream inputStream = multipartFile.getInputStream()) {
             if (multipartFile.isEmpty() || !multipartFile.getOriginalFilename().contains(".")){
                 return AjaxResult.error("文件为空或文件名不合法");
@@ -75,14 +69,17 @@ public class MinioServiceImpl implements InitializingBean {
             PutObjectOptions putObjectOptions = new PutObjectOptions(multipartFile.getSize(), PutObjectOptions.MIN_MULTIPART_SIZE);
             // 文件的ContentType
             putObjectOptions.setContentType(multipartFile.getContentType());
-            minioClient.putObject(this.bucket, fileName, inputStream, putObjectOptions);
+            String bucketName = MinioUtils.getMinioBucketName(suffix.toLowerCase());
+            minioClient.putObject(bucketName, fileName, inputStream, putObjectOptions);
             // 返回访问路径
-            String file_url = this.url + UriUtils.encode(fileName, StandardCharsets.UTF_8);
+            String file_url = this.host+bucketName+"/"+UriUtils.encode(fileName, StandardCharsets.UTF_8);
             Resource resource = new Resource();
             resource.setName(fileName);
             resource.setUrl(file_url);
-            resource.setType(MinioUtils.getMinioBucketName(suffix));
             return AjaxResult.success(resource);
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error("上传失败");
         }
     }
  
@@ -93,6 +90,7 @@ public class MinioServiceImpl implements InitializingBean {
         // 从链接中得到文件名
         InputStream inputStream;
         try {
+            String bucket = MinioUtils.getMinioBucketName(fileName.split("\\.")[1].toLowerCase());
             MinioClient minioClient = new MinioClient(host, accessKey, secretKey);
             ObjectStat stat = minioClient.statObject(bucket, fileName);
             inputStream = minioClient.getObject(bucket, fileName);
@@ -235,11 +233,11 @@ public class MinioServiceImpl implements InitializingBean {
     /**
      * 删除一个对象
      *
-     * @param bucketName 存储桶名称
      * @param objectName 存储桶里的对象名称
      * @throws Exception
      */
-    public boolean removeObject(String bucketName, String objectName) throws Exception {
+    public boolean removeObject(String objectName) throws Exception {
+        String bucketName = MinioUtils.getMinioBucketName(objectName.split("\\.")[1].toLowerCase());
         boolean flag = bucketExists(bucketName);
         if (flag) {
             List<String> objectList = listObjectNames(bucketName);

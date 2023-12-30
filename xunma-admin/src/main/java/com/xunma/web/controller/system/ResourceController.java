@@ -77,7 +77,7 @@ public class ResourceController extends BaseController
     @PostMapping
     public AjaxResult add(@RequestBody Resource resource)
     {
-        return toAjax(resourceService.insertResource(resource));
+        return resourceService.insertResource(resource);
     }
 
     /**

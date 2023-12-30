@@ -1,7 +1,13 @@
 package com.xunma.system.service.impl;
 
 import java.util.List;
+
+import com.xunma.common.core.domain.AjaxResult;
 import com.xunma.common.utils.DateUtils;
+import com.xunma.common.utils.SecurityUtils;
+import com.xunma.common.utils.minio.MinioUtils;
+import com.xunma.system.domain.XmOrder;
+import com.xunma.system.mapper.XmOrderMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.xunma.system.mapper.ResourceMapper;
@@ -19,6 +25,9 @@ public class ResourceServiceImpl implements IResourceService
 {
     @Autowired
     private ResourceMapper resourceMapper;
+
+    @Autowired
+    private XmOrderMapper xmOrderMapper;
 
     /**
      * 查询资源管理
@@ -51,10 +60,32 @@ public class ResourceServiceImpl implements IResourceService
      * @return 结果
      */
     @Override
-    public int insertResource(Resource resource)
+    public AjaxResult insertResource(Resource resource)
     {
+        //校验订单编号是否存在
+        Long id = resource.getOrderId();
+        if(id != null){
+            XmOrder xmOrder = xmOrderMapper.selectXmOrderById(id);
+            if(xmOrder == null){
+                return AjaxResult.error("订单编号不存在");
+            }
+        }
+        //填写参数
+        String url = resource.getUrl();
+        if(url == null || url.equals("")){
+            return AjaxResult.error("资源不能为空");
+        }
+        String suffix = url.split("/")[url.split("/").length-1].split("\\.")[1].toLowerCase();
+        String type = MinioUtils.getResourceType(suffix);
+        resource.setType(type);
+        if (resource.getName()==null || resource.getName().equals("")){
+            resource.setName(url.split("/")[url.split("/").length-1]);
+        }
+        resource.setCreateBy(SecurityUtils.getUsername());
+        resource.setUpdateBy(SecurityUtils.getUsername());
         resource.setCreateTime(DateUtils.getNowDate());
-        return resourceMapper.insertResource(resource);
+        resource.setUpdateTime(DateUtils.getNowDate());
+        return AjaxResult.success(resourceMapper.insertResource(resource));
     }
 
     /**
@@ -66,6 +97,18 @@ public class ResourceServiceImpl implements IResourceService
     @Override
     public int updateResource(Resource resource)
     {
+        //填写参数
+        String url = resource.getUrl();
+        if(url == null || url.equals("")){
+            return 0;
+        }
+        String suffix = url.split("/")[url.split("/").length-1].split("\\.")[1].toLowerCase();
+        String type = MinioUtils.getResourceType(suffix);
+        resource.setType(type);
+        if (resource.getName()==null || resource.getName().equals("")){
+            resource.setName(url.split("/")[url.split("/").length-1]);
+        }
+        resource.setUpdateBy(SecurityUtils.getUsername());
         resource.setUpdateTime(DateUtils.getNowDate());
         return resourceMapper.updateResource(resource);
     }

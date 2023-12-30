@@ -56,7 +56,7 @@ export default {
     // 大小限制(MB)
     fileSize: {
        type: Number,
-      default: 5,
+      default: 50,
     },
     // 文件类型, 例如['png', 'jpg', 'jpeg']
     fileType: {
@@ -77,7 +77,7 @@ export default {
       dialogVisible: false,
       hideUpload: false,
       baseUrl: process.env.VUE_APP_BASE_API,
-      uploadImgUrl: process.env.VUE_APP_BASE_API + "/common/upload", // 上传的图片服务器地址
+      uploadImgUrl: process.env.VUE_APP_BASE_API + "/xunma/minio/upload", // 上传的图片服务器地址
       headers: {
         Authorization: "Bearer " + getToken(),
       },
@@ -94,7 +94,7 @@ export default {
           this.fileList = list.map(item => {
             if (typeof item === "string") {
               if (item.indexOf(this.baseUrl) === -1) {
-                  item = { name: this.baseUrl + item, url: this.baseUrl + item };
+                  item = { name: item, url: item };
               } else {
                   item = { name: item, url: item };
               }
@@ -155,7 +155,7 @@ export default {
     // 上传成功回调
     handleUploadSuccess(res, file) {
       if (res.code === 200) {
-        this.uploadList.push({ name: res.fileName, url: res.fileName });
+        this.uploadList.push({ name: res.data.url, url: res.data.url });
         this.uploadedSuccessfully();
       } else {
         this.number--;
@@ -186,6 +186,7 @@ export default {
         this.number = 0;
         this.$emit("input", this.listToString(this.fileList));
         this.$modal.closeLoading();
+        console.log(this.fileList);
       }
     },
     // 预览

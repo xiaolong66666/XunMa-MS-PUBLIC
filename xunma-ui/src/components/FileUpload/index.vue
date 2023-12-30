@@ -60,7 +60,7 @@ export default {
     // 文件类型, 例如['png', 'jpg', 'jpeg']
     fileType: {
       type: Array,
-      default: () => ["doc", "xls", "ppt", "txt", "pdf"],
+      default: () => ["doc", "xls", "ppt", "txt", "pdf","zip","rar","docx","xlsx","pptx"],
     },
     // 是否显示提示
     isShowTip: {
@@ -73,7 +73,7 @@ export default {
       number: 0,
       uploadList: [],
       baseUrl: process.env.VUE_APP_BASE_API,
-      uploadFileUrl: process.env.VUE_APP_BASE_API + "/common/upload", // 上传文件服务器地址
+      uploadFileUrl: process.env.VUE_APP_BASE_API + "/xunma/minio/upload", // 上传文件服务器地址
       headers: {
         Authorization: "Bearer " + getToken(),
       },
@@ -147,7 +147,7 @@ export default {
     // 上传成功回调
     handleUploadSuccess(res, file) {
       if (res.code === 200) {
-        this.uploadList.push({ name: res.fileName, url: res.fileName });
+        this.uploadList.push({ name: res.data.url, url: res.data.url});
         this.uploadedSuccessfully();
       } else {
         this.number--;
@@ -170,6 +170,7 @@ export default {
         this.number = 0;
         this.$emit("input", this.listToString(this.fileList));
         this.$modal.closeLoading();
+        console.log(this.fileList);
       }
     },
     // 获取文件名称

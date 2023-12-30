@@ -9,7 +9,7 @@ import java.util.List;
  
 @RestController
 @CrossOrigin
-@RequestMapping("/xunma/file")
+@RequestMapping("/xunma/minio")
 public class MinioController {
  
     @Autowired
@@ -53,8 +53,8 @@ public class MinioController {
  
     // 删除一个对象
     @PostMapping("/removeObject")
-    public boolean removeObject(String bucketName, String objectName) throws Exception {
-        return this.minioConfig.removeObject(bucketName, objectName);
+    public boolean removeObject(String objectName) throws Exception {
+        return this.minioConfig.removeObject(objectName);
     }
  
     // 文件访问路径
