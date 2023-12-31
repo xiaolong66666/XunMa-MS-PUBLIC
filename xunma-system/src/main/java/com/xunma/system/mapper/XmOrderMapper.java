@@ -2,6 +2,7 @@ package com.xunma.system.mapper;
 
 import java.util.List;
 import com.xunma.system.domain.XmOrder;
+import com.xunma.system.domain.dto.XmOrderDto;
 
 /**
  * 订单Mapper接口
@@ -17,7 +18,7 @@ public interface XmOrderMapper
      * @param id 订单主键
      * @return 订单
      */
-    public XmOrder selectXmOrderById(Long id);
+    public XmOrderDto selectXmOrderById(Long id);
 
     /**
      * 查询订单列表
@@ -25,7 +26,7 @@ public interface XmOrderMapper
      * @param xmOrder 订单
      * @return 订单集合
      */
-    public List<XmOrder> selectXmOrderList(XmOrder xmOrder);
+    public List<XmOrderDto> selectXmOrderList(XmOrder xmOrder);
 
     /**
      * 新增订单

@@ -58,4 +58,7 @@ public interface ResourceMapper
      * @return 结果
      */
     public int deleteResourceByIds(Long[] ids);
+
+    public List<Resource> selectResourceByOrderId(Long OrderId);
+
 }

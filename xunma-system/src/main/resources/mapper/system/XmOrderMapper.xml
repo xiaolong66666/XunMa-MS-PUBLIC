@@ -4,7 +4,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.xunma.system.mapper.XmOrderMapper">
     
-    <resultMap type="XmOrder" id="XmOrderResult">
+    <resultMap type="com.xunma.system.domain.dto.XmOrderDto" id="XmOrderResult">
         <result property="id"    column="id"    />
         <result property="customerName"    column="customer_name"    />
         <result property="takeName"    column="take_name"    />
@@ -18,15 +18,32 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="updateTime"    column="update_time"    />
         <result property="createBy"    column="create_by"    />
         <result property="updateBy"    column="update_by"    />
+
+<!--        <collection property="resourceList" javaType="Resource" column="id" select="com.xunma.system.mapper.ResourceMapper.selectResourceByOrderId" />-->
+<!--        <association property="resourceList" javaType="Resource" column="id" select="com.xunma.system.mapper.ResourceMapper.selectResourceByOrderId">-->
+<!--            <result property="id"    column="id"    />-->
+<!--            <result property="name"    column="name"    />-->
+<!--            <result property="type"    column="type"    />-->
+<!--            <result property="url"    column="url"    />-->
+<!--            <result property="orderId"    column="order_id"    />-->
+<!--            <result property="createTime"    column="create_time"    />-->
+<!--            <result property="updateTime"    column="update_time"    />-->
+<!--            <result property="createBy"    column="create_by"    />-->
+<!--            <result property="updateBy"    column="update_by"    />-->
+<!--        </association>-->
     </resultMap>
+    <resultMap id="resourceResultMap" type="com.xunma.system.domain.dto.XmOrderDto" extends="XmOrderResult">
+        <collection property="resourceList" select="com.xunma.system.mapper.ResourceMapper.selectResourceByOrderId" column="{orderId = id}"/>
+    </resultMap>
+
 
     <sql id="selectXmOrderVo">
         select id, customer_name, take_name, order_type_id, status, amount,  description, is_delete, deadline, create_time, update_time, create_by, update_by from xm_order
     </sql>
 
-    <select id="selectXmOrderList" parameterType="XmOrder" resultMap="XmOrderResult">
+    <select id="selectXmOrderList" parameterType="XmOrder" resultMap="resourceResultMap">
         <include refid="selectXmOrderVo"/>
-        <where>  
+        <where>
             <if test="customerName != null  and customerName != ''"> and customer_name like concat('%', #{customerName}, '%')</if>
             <if test="takeName != null  and takeName != ''"> and take_name like concat('%', #{takeName}, '%')</if>
             <if test="orderTypeId != null  and orderTypeId != ''"> and order_type_id = #{orderTypeId}</if>
@@ -38,7 +55,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         </where>
     </select>
     
-    <select id="selectXmOrderById" parameterType="Long" resultMap="XmOrderResult">
+    <select id="selectXmOrderById" parameterType="Long" resultMap="resourceResultMap">
         <include refid="selectXmOrderVo"/>
         where id = #{id}
     </select>
@@ -62,7 +79,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="customerName != null and customerName != ''">#{customerName},</if>
             <if test="takeName != null and takeName != ''">#{takeName},</if>
-            <if test="orderType != null and orderType != ''">#{orderType},</if>
+            <if test="orderTypeId != null and orderTypeId != ''">#{orderTypeId},</if>
             <if test="status != null and status != ''">#{status},</if>
             <if test="amount != null">#{amount},</if>
             <if test="description != null and description != ''">#{description},</if>

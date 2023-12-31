@@ -2,6 +2,10 @@ package com.xunma.web.controller.system;
 
 import java.util.List;
 import javax.servlet.http.HttpServletResponse;
+
+import cn.hutool.core.bean.BeanUtil;
+import com.xunma.system.domain.dto.XmOrderDto;
+import org.springframework.beans.BeanUtils;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,10 +43,10 @@ public class XmOrderController extends BaseController
      */
     @PreAuthorize("@ss.hasPermi('system:order:list')")
     @GetMapping("/list")
-    public TableDataInfo list(XmOrder xmOrder)
+    public TableDataInfo list(XmOrderDto xmOrderDto)
     {
         startPage();
-        List<XmOrder> list = xmOrderService.selectXmOrderList(xmOrder);
+        List<XmOrderDto> list = xmOrderService.selectXmOrderList(xmOrderDto);
         return getDataTable(list);
     }
 
@@ -54,8 +58,9 @@ public class XmOrderController extends BaseController
     @PostMapping("/export")
     public void export(HttpServletResponse response, XmOrder xmOrder)
     {
-        List<XmOrder> list = xmOrderService.selectXmOrderList(xmOrder);
-        ExcelUtil<XmOrder> util = new ExcelUtil<XmOrder>(XmOrder.class);
+        XmOrderDto xmOrderDto = BeanUtil.copyProperties(xmOrder, XmOrderDto.class);
+        List<XmOrderDto> list = xmOrderService.selectXmOrderList(xmOrderDto);
+        ExcelUtil<XmOrderDto> util = new ExcelUtil<XmOrderDto>(XmOrderDto.class);
         util.exportExcel(response, list, "订单数据");
     }
 

@@ -121,15 +121,15 @@
         </template>
       </el-table-column>
       <el-table-column label="金额" align="center" prop="amount" />
-      <el-table-column label="附加文件" align="center" prop="files" >
+      <el-table-column label="附加文件" align="center" prop="resourceList" >
         <template slot-scope="scope">
           <el-dropdown >
-            <span v-if="scope.row.files && scope.row.files.length > 0" class="el-dropdown-link">具体文件
+            <span v-if="scope.row.resourceList && scope.row.resourceList.length > 0" class="el-dropdown-link">具体文件
               <i class="el-icon-arrow-down el-icon--right"></i>
             </span>
             <span v-else class="el-dropdown-link">暂无文件</span>
             <el-dropdown-menu  slot="dropdown">
-              <el-dropdown-item v-for="(item,index) in scope.row.files">
+              <el-dropdown-item v-for="(item,index) in scope.row.resourceList">
                 <el-link type="primary" :href="item.url">{{item.name}}</el-link>
               </el-dropdown-item>
             </el-dropdown-menu>
@@ -140,7 +140,7 @@
       <el-table-column label="描述" align="center" prop="description" />
       <el-table-column label="是否过期" align="center" prop="isOverdue">
         <template slot-scope="scope">
-          <dict-tag :options="dict.type.xm_order_overdue" :value="Date.now() > scope.row.deadline ? 0:1"/>
+          <dict-tag :options="dict.type.xm_order_overdue" :value="checkDeadline(scope.row.deadline)"/>
         </template>
       </el-table-column>
       <el-table-column label="截止时间" align="center" prop="deadline" width="180">
@@ -284,6 +284,7 @@ export default {
         deadline: null,
         createTime: null,
         createBy: null,
+        resourceList:[]
       },
       // 表单参数
       form: {},
@@ -320,6 +321,16 @@ export default {
     this.getList();
   },
   methods: {
+    //检查是否逾期
+    checkDeadline(deadline){
+      const now = Date.now();
+      const target = new Date(deadline);
+      if (now > target) {
+        return 1;
+      } else {
+        return 0;
+      }
+    },
     //查询所有类型
     listType() {
       listType(this.queryTypeParams).then(response => {

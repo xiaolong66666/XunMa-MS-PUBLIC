@@ -7,6 +7,7 @@ import com.xunma.common.utils.DateUtils;
 import com.xunma.common.utils.SecurityUtils;
 import com.xunma.common.utils.minio.MinioUtils;
 import com.xunma.system.domain.Resource;
+import com.xunma.system.domain.dto.XmOrderDto;
 import com.xunma.system.service.IResourceService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +38,7 @@ public class XmOrderServiceImpl implements IXmOrderService
      * @return 订单
      */
     @Override
-    public XmOrder selectXmOrderById(Long id)
+    public XmOrderDto selectXmOrderById(Long id)
     {
         return xmOrderMapper.selectXmOrderById(id);
     }
@@ -49,7 +50,7 @@ public class XmOrderServiceImpl implements IXmOrderService
      * @return 订单
      */
     @Override
-    public List<XmOrder> selectXmOrderList(XmOrder xmOrder)
+    public List<XmOrderDto> selectXmOrderList(XmOrder xmOrder)
     {
         return xmOrderMapper.selectXmOrderList(xmOrder);
     }

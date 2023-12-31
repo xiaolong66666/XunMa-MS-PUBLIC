@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.xunma.common.core.domain.AjaxResult;
 import com.xunma.system.domain.XmOrder;
+import com.xunma.system.domain.dto.XmOrderDto;
 
 /**
  * 订单Service接口
@@ -27,7 +28,7 @@ public interface IXmOrderService
      * @param xmOrder 订单
      * @return 订单集合
      */
-    public List<XmOrder> selectXmOrderList(XmOrder xmOrder);
+    public List<XmOrderDto> selectXmOrderList(XmOrder xmOrder);
 
     /**
      * 新增订单
