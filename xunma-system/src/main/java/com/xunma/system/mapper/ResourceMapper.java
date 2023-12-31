@@ -61,4 +61,5 @@ public interface ResourceMapper
 
     public List<Resource> selectResourceByOrderId(Long OrderId);
 
+    public void deleteResourceByOrderId(Long id);
 }

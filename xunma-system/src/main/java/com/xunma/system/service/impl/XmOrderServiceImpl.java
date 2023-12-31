@@ -75,6 +75,12 @@ public class XmOrderServiceImpl implements IXmOrderService
             return AjaxResult.error("订单添加失败");
         }
         //保存上传资源
+        saveResources(xmOrder);
+        log.info("订单添加成功，订单信息：{}",xmOrder);
+        return AjaxResult.success("订单添加成功");
+    }
+
+    private void saveResources(XmOrder xmOrder) {
         //获取订单id
         Long orderId = xmOrder.getId();
         String[] urls = xmOrder.getFiles().split(",");
@@ -90,8 +96,6 @@ public class XmOrderServiceImpl implements IXmOrderService
             resource.setCreateTime(DateUtils.getNowDate());
             resourceService.insertResource(resource);
         }
-        log.info("订单添加成功，订单信息：{}",xmOrder);
-        return AjaxResult.success("订单添加成功");
     }
 
     /**
@@ -100,10 +104,19 @@ public class XmOrderServiceImpl implements IXmOrderService
      * @param xmOrder 订单
      * @return 结果
      */
+    @Transactional
     @Override
     public int updateXmOrder(XmOrder xmOrder)
     {
+        //对订单相关资源采取
+        Long id = xmOrder.getId();
+        //删除原有资源
+        resourceService.deleteResourceByOrderId(id);
+        //保存上传资源
         xmOrder.setUpdateTime(DateUtils.getNowDate());
+        xmOrder.setUpdateBy(SecurityUtils.getUsername());
+        //保存更新资源
+        saveResources(xmOrder);
         return xmOrderMapper.updateXmOrder(xmOrder);
     }
 

@@ -134,4 +134,9 @@ public class ResourceServiceImpl implements IResourceService
     {
         return resourceMapper.deleteResourceById(id);
     }
+
+    @Override
+    public void deleteResourceByOrderId(Long id) {
+        resourceMapper.deleteResourceByOrderId(id);
+    }
 }

@@ -60,4 +60,6 @@ public interface IResourceService
      * @return 结果
      */
     public int deleteResourceById(Long id);
+
+    void deleteResourceByOrderId(Long id);
 }

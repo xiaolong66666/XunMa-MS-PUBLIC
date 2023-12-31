@@ -27,6 +27,16 @@
           />
         </el-select>
       </el-form-item>
+      <el-form-item label="订单类型" prop="orderTypeId">
+        <el-select v-model="queryParams.orderTypeId" placeholder="请选择">
+          <el-option
+            v-for="item in typeList"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id">
+          </el-option>
+        </el-select>
+      </el-form-item>
       <el-form-item label="截止时间">
         <el-date-picker
           v-model="daterangeDeadline"
@@ -114,7 +124,12 @@
       <el-table-column label="订单编号" align="center" prop="id" />
       <el-table-column label="客户称呼" align="center" prop="customerName" />
       <el-table-column label="技术称呼" align="center" prop="takeName" />
-      <el-table-column label="订单类型" align="center" prop="orderTypeId" />
+      <el-table-column label="订单类型" align="center" prop="orderTypeId" >
+        <template slot-scope="scope">
+          <span>{{getTypeName(scope.row.orderTypeId)}}</span>
+<!--          <dict-tag :options="typeList" :value="scope.row.orderTypeId"/>-->
+        </template>
+      </el-table-column>
       <el-table-column label="状态" align="center" prop="status">
         <template slot-scope="scope">
           <dict-tag :options="dict.type.xm_order_status" :value="scope.row.status"/>
@@ -137,7 +152,12 @@
 
         </template>
       </el-table-column>
-      <el-table-column label="描述" align="center" prop="description" />
+      <el-table-column label="描述" align="center" prop="description" >
+        <template slot-scope="scope">
+          <el-button type="text" @click="showDetail(scope.row.description)">查看描述</el-button>
+        </template>
+      </el-table-column>
+
       <el-table-column label="是否过期" align="center" prop="isOverdue">
         <template slot-scope="scope">
           <dict-tag :options="dict.type.xm_order_overdue" :value="checkDeadline(scope.row.deadline)"/>
@@ -173,7 +193,16 @@
         </template>
       </el-table-column>
     </el-table>
-
+    <el-dialog
+      title="订单详细描述"
+      :visible.sync="centerDialogVisible"
+      width="80%"
+      center>
+      <span>{{showText}}</span>
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="centerDialogVisible = false">关闭</el-button>
+      </span>
+    </el-dialog>
     <pagination
       v-show="total>0"
       :total="total"
@@ -194,6 +223,17 @@
         <el-form-item label="金额" prop="amount">
           <el-input v-model="form.amount" placeholder="请输入金额" />
         </el-form-item>
+        <el-form-item label="订单状态" prop="status">
+          <el-select v-model="form.status" placeholder="请选择状态" clearable>
+            <el-option
+              v-for="dict in dict.type.xm_order_status"
+              :key="dict.value"
+              :label="dict.label"
+              :value="dict.value"
+            />
+          </el-select>
+        </el-form-item>
+
         <el-form-item label="订单类型" prop="orderTypeId">
 <!--          <el-input v-model="form.orderType" placeholder="请输入金额" />-->
           <el-select v-model="form.orderTypeId" placeholder="请选择">
@@ -241,6 +281,9 @@ export default {
   dicts: ['xm_order_overdue', 'xm_order_status'],
   data() {
     return {
+      //描述信息
+      showText: '',
+      centerDialogVisible: false,
       //查询订单类型参数
       queryTypeParams: {
         pageNum: 1,
@@ -319,8 +362,22 @@ export default {
   },
   created() {
     this.getList();
+    this.listType();
   },
   methods: {
+    //根据typeId获取typeName
+    getTypeName(typeId){
+      for(let i=0;i<this.typeList.length;i++){
+        if(this.typeList[i].id == typeId){
+          return this.typeList[i].name;
+        }
+      }
+    },
+    //查看详细描述
+    showDetail(text){
+      this.centerDialogVisible = true;
+      this.showText = text;
+    },
     //检查是否逾期
     checkDeadline(deadline){
       const now = Date.now();
@@ -400,18 +457,19 @@ export default {
     },
     /** 新增按钮操作 */
     handleAdd() {
-      this.listType();
       this.reset();
       this.open = true;
       this.title = "添加订单";
     },
     /** 修改按钮操作 */
     handleUpdate(row) {
-      this.listType();
       this.reset();
       const id = row.id || this.ids
       getOrder(id).then(response => {
         this.form = response.data;
+        //赋值form.files
+        let temp = response.data.resourceList;
+        this.form.files = temp.map(item => item.url).join(",");
         this.open = true;
         this.title = "修改订单";
       });
