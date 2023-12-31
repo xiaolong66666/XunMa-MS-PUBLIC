@@ -186,7 +186,6 @@ export default {
         this.number = 0;
         this.$emit("input", this.listToString(this.fileList));
         this.$modal.closeLoading();
-        console.log(this.fileList);
       }
     },
     // 预览

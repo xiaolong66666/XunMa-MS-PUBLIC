@@ -75,11 +75,10 @@ public class ResourceServiceImpl implements IResourceService
         if(url == null || url.equals("")){
             return AjaxResult.error("资源不能为空");
         }
-        String suffix = url.split("/")[url.split("/").length-1].split("\\.")[1].toLowerCase();
-        String type = MinioUtils.getResourceType(suffix);
+        String type = MinioUtils.getResourceTypeByUrl(url);
         resource.setType(type);
         if (resource.getName()==null || resource.getName().equals("")){
-            resource.setName(url.split("/")[url.split("/").length-1]);
+            resource.setName(MinioUtils.getFileNameByUrl(url));
         }
         resource.setCreateBy(SecurityUtils.getUsername());
         resource.setUpdateBy(SecurityUtils.getUsername());
@@ -102,11 +101,10 @@ public class ResourceServiceImpl implements IResourceService
         if(url == null || url.equals("")){
             return 0;
         }
-        String suffix = url.split("/")[url.split("/").length-1].split("\\.")[1].toLowerCase();
-        String type = MinioUtils.getResourceType(suffix);
+        String type = MinioUtils.getResourceTypeByUrl(url);
         resource.setType(type);
         if (resource.getName()==null || resource.getName().equals("")){
-            resource.setName(url.split("/")[url.split("/").length-1]);
+            resource.setName(MinioUtils.getFileNameByUrl(url));
         }
         resource.setUpdateBy(SecurityUtils.getUsername());
         resource.setUpdateTime(DateUtils.getNowDate());

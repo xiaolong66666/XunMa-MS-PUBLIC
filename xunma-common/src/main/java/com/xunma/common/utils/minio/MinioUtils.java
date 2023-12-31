@@ -25,6 +25,19 @@ public class MinioUtils {
             return MinioConstants.MINIO_BUCKET_GENERAL;
         }
     }
+    //根据对饮的后缀字符串获取对应的minio桶名称
+    public static String getMinioBucketByUrl(String url) {
+        String suffix = url.split("/")[url.split("/").length-1].split("\\.")[1].toLowerCase();
+        if (IMAGE_SUFFIX.contains(suffix)) {
+            return MinioConstants.MINIO_BUCKET_IMAGE;
+        } else if (VIDEO_SUFFIX.contains(suffix)) {
+            return MinioConstants.MINIO_BUCKET_VIDEO;
+        } else if (PACKAGE_SUFFIX.contains(suffix)) {
+            return MinioConstants.MINIO_BUCKET_PACKAGE;
+        } else {
+            return MinioConstants.MINIO_BUCKET_GENERAL;
+        }
+    }
     //获取资源类型
     public static String getResourceType(String suffix) {
         if (IMAGE_SUFFIX.contains(suffix)) {
@@ -33,6 +46,19 @@ public class MinioUtils {
             return "2";
         }
         return "1";
+    }
+    public static String getResourceTypeByUrl(String url) {
+        String suffix = url.split("/")[url.split("/").length-1].split("\\.")[1].toLowerCase();
+        if (IMAGE_SUFFIX.contains(suffix)) {
+            return "0";
+        } else if (VIDEO_SUFFIX.contains(suffix)) {
+            return "2";
+        }
+        return "1";
+    }
+    //通过url获取文件名
+    public static String getFileNameByUrl(String url) {
+        return url.split("/")[url.split("/").length-1];
     }
 
 }

@@ -1,6 +1,8 @@
 package com.xunma.system.service;
 
 import java.util.List;
+
+import com.xunma.common.core.domain.AjaxResult;
 import com.xunma.system.domain.XmOrder;
 
 /**
@@ -33,7 +35,7 @@ public interface IXmOrderService
      * @param xmOrder 订单
      * @return 结果
      */
-    public int insertXmOrder(XmOrder xmOrder);
+    public AjaxResult insertXmOrder(XmOrder xmOrder);
 
     /**
      * 修改订单

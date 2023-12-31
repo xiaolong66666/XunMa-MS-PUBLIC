@@ -27,16 +27,6 @@
           />
         </el-select>
       </el-form-item>
-      <el-form-item label="是否过期" prop="isOverdue">
-        <el-select v-model="queryParams.isOverdue" placeholder="请选择是否过期" clearable>
-          <el-option
-            v-for="dict in dict.type.xm_order_overdue"
-            :key="dict.value"
-            :label="dict.label"
-            :value="dict.value"
-          />
-        </el-select>
-      </el-form-item>
       <el-form-item label="截止时间">
         <el-date-picker
           v-model="daterangeDeadline"
@@ -124,33 +114,43 @@
       <el-table-column label="订单编号" align="center" prop="id" />
       <el-table-column label="客户称呼" align="center" prop="customerName" />
       <el-table-column label="技术称呼" align="center" prop="takeName" />
-      <el-table-column label="订单类型" align="center" prop="orderType" />
+      <el-table-column label="订单类型" align="center" prop="orderTypeId" />
       <el-table-column label="状态" align="center" prop="status">
         <template slot-scope="scope">
           <dict-tag :options="dict.type.xm_order_status" :value="scope.row.status"/>
         </template>
       </el-table-column>
       <el-table-column label="金额" align="center" prop="amount" />
-      <el-table-column label="图片信息" align="center" prop="images" width="100">
+      <el-table-column label="附加文件" align="center" prop="files" >
         <template slot-scope="scope">
-          <image-preview :src="scope.row.images" :width="50" :height="50"/>
+          <el-dropdown >
+            <span v-if="scope.row.files && scope.row.files.length > 0" class="el-dropdown-link">具体文件
+              <i class="el-icon-arrow-down el-icon--right"></i>
+            </span>
+            <span v-else class="el-dropdown-link">暂无文件</span>
+            <el-dropdown-menu  slot="dropdown">
+              <el-dropdown-item v-for="(item,index) in scope.row.files">
+                <el-link type="primary" :href="item.url">{{item.name}}</el-link>
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </el-dropdown>
+
         </template>
       </el-table-column>
-      <el-table-column label="文件信息" align="center" prop="files" />
       <el-table-column label="描述" align="center" prop="description" />
       <el-table-column label="是否过期" align="center" prop="isOverdue">
         <template slot-scope="scope">
-          <dict-tag :options="dict.type.xm_order_overdue" :value="scope.row.isOverdue"/>
+          <dict-tag :options="dict.type.xm_order_overdue" :value="Date.now() > scope.row.deadline ? 0:1"/>
         </template>
       </el-table-column>
       <el-table-column label="截止时间" align="center" prop="deadline" width="180">
         <template slot-scope="scope">
-          <span>{{ parseTime(scope.row.deadline, '{y}-{m}-{d}') }}</span>
+          <span>{{ parseTime(scope.row.deadline, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
         </template>
       </el-table-column>
       <el-table-column label="创建时间" align="center" prop="createTime" width="180">
         <template slot-scope="scope">
-          <span>{{ parseTime(scope.row.createTime, '{y}-{m}-{d}') }}</span>
+          <span>{{ parseTime(scope.row.createTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
         </template>
       </el-table-column>
       <el-table-column label="创建人" align="center" prop="createBy" />
@@ -194,20 +194,32 @@
         <el-form-item label="金额" prop="amount">
           <el-input v-model="form.amount" placeholder="请输入金额" />
         </el-form-item>
-        <el-form-item label="图片信息" prop="images">
-          <image-upload v-model="form.images"/>
+        <el-form-item label="订单类型" prop="orderTypeId">
+<!--          <el-input v-model="form.orderType" placeholder="请输入金额" />-->
+          <el-select v-model="form.orderTypeId" placeholder="请选择">
+            <el-option
+              v-for="item in typeList"
+              :key="item.id"
+              :label="item.name"
+              :value="item.id">
+            </el-option>
+          </el-select>
         </el-form-item>
+<!--        <el-form-item label="图片信息" prop="images">-->
+<!--          <image-upload v-model="form.images"/>-->
+<!--        </el-form-item>-->
         <el-form-item label="文件信息" prop="files">
           <file-upload v-model="form.files"/>
         </el-form-item>
         <el-form-item label="描述" prop="description">
           <el-input v-model="form.description" type="textarea" placeholder="请输入内容" />
         </el-form-item>
+
         <el-form-item label="截止时间" prop="deadline">
           <el-date-picker clearable
             v-model="form.deadline"
-            type="date"
-            value-format="yyyy-MM-dd"
+            type="datetime"
+            value-format="yyyy-MM-dd HH:mm:ss"
             placeholder="请选择截止时间">
           </el-date-picker>
         </el-form-item>
@@ -222,12 +234,20 @@
 
 <script>
 import { listOrder, getOrder, delOrder, addOrder, updateOrder } from "@/api/system/order";
+import { listType} from "@/api/system/type";
 
 export default {
   name: "Order",
   dicts: ['xm_order_overdue', 'xm_order_status'],
   data() {
     return {
+      //查询订单类型参数
+      queryTypeParams: {
+        pageNum: 1,
+        pageSize: 999,
+      },
+      //订单类型列表
+      typeList: [],
       // 遮罩层
       loading: true,
       // 选中数组
@@ -256,12 +276,11 @@ export default {
         pageSize: 10,
         customerName: null,
         takeName: null,
-        orderType: null,
+        orderTypeId: null,
         status: null,
         images: null,
         files: null,
         description: null,
-        isOverdue: null,
         deadline: null,
         createTime: null,
         createBy: null,
@@ -276,7 +295,7 @@ export default {
         takeName: [
           { required: true, message: "技术称呼不能为空", trigger: "blur" }
         ],
-        orderType: [
+        orderTypeId: [
           { required: true, message: "订单类型不能为空", trigger: "change" }
         ],
         status: [
@@ -291,24 +310,9 @@ export default {
         isOverdue: [
           { required: true, message: "是否过期不能为空", trigger: "change" }
         ],
-        isDelete: [
-          { required: true, message: "是否删除 0-否 1-是不能为空", trigger: "blur" }
-        ],
         deadline: [
           { required: true, message: "截止时间不能为空", trigger: "blur" }
         ],
-        createTime: [
-          { required: true, message: "创建时间不能为空", trigger: "blur" }
-        ],
-        updateTime: [
-          { required: true, message: "更新时间不能为空", trigger: "blur" }
-        ],
-        createBy: [
-          { required: true, message: "创建人不能为空", trigger: "blur" }
-        ],
-        updateBy: [
-          { required: true, message: "更新人不能为空", trigger: "blur" }
-        ]
       }
     };
   },
@@ -316,6 +320,12 @@ export default {
     this.getList();
   },
   methods: {
+    //查询所有类型
+    listType() {
+      listType(this.queryTypeParams).then(response => {
+        this.typeList = response.rows;
+      });
+    },
     /** 查询订单列表 */
     getList() {
       this.loading = true;
@@ -345,13 +355,11 @@ export default {
         id: null,
         customerName: null,
         takeName: null,
-        orderType: null,
+        orderTypeId: null,
         status: null,
         amount: null,
-        images: null,
         files: null,
         description: null,
-        isOverdue: null,
         isDelete: null,
         deadline: null,
         createTime: null,
@@ -381,12 +389,14 @@ export default {
     },
     /** 新增按钮操作 */
     handleAdd() {
+      this.listType();
       this.reset();
       this.open = true;
       this.title = "添加订单";
     },
     /** 修改按钮操作 */
     handleUpdate(row) {
+      this.listType();
       this.reset();
       const id = row.id || this.ids
       getOrder(id).then(response => {
@@ -434,3 +444,12 @@ export default {
   }
 };
 </script>
+<style>
+.el-dropdown-link {
+  cursor: pointer;
+  color: #409EFF;
+}
+.el-icon-arrow-down {
+  font-size: 12px;
+}
+</style>

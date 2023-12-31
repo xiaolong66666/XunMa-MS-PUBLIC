@@ -77,7 +77,7 @@ public class XmOrderController extends BaseController
     @PostMapping
     public AjaxResult add(@RequestBody XmOrder xmOrder)
     {
-        return toAjax(xmOrderService.insertXmOrder(xmOrder));
+        return xmOrderService.insertXmOrder(xmOrder);
     }
 
     /**

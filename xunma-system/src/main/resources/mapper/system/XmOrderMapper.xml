@@ -8,13 +8,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="id"    column="id"    />
         <result property="customerName"    column="customer_name"    />
         <result property="takeName"    column="take_name"    />
-        <result property="orderType"    column="order_type"    />
+        <result property="orderTypeId"    column="order_type_id"    />
         <result property="status"    column="status"    />
         <result property="amount"    column="amount"    />
-        <result property="images"    column="images"    />
-        <result property="files"    column="files"    />
         <result property="description"    column="description"    />
-        <result property="isOverdue"    column="is_overdue"    />
         <result property="isDelete"    column="is_delete"    />
         <result property="deadline"    column="deadline"    />
         <result property="createTime"    column="create_time"    />
@@ -24,7 +21,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <sql id="selectXmOrderVo">
-        select id, customer_name, take_name, order_type, status, amount, images, files, description, is_overdue, is_delete, deadline, create_time, update_time, create_by, update_by from xm_order
+        select id, customer_name, take_name, order_type_id, status, amount,  description, is_delete, deadline, create_time, update_time, create_by, update_by from xm_order
     </sql>
 
     <select id="selectXmOrderList" parameterType="XmOrder" resultMap="XmOrderResult">
@@ -32,12 +29,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <where>  
             <if test="customerName != null  and customerName != ''"> and customer_name like concat('%', #{customerName}, '%')</if>
             <if test="takeName != null  and takeName != ''"> and take_name like concat('%', #{takeName}, '%')</if>
-            <if test="orderType != null  and orderType != ''"> and order_type = #{orderType}</if>
+            <if test="orderTypeId != null  and orderTypeId != ''"> and order_type_id = #{orderTypeId}</if>
             <if test="status != null  and status != ''"> and status = #{status}</if>
-            <if test="images != null  and images != ''"> and images = #{images}</if>
-            <if test="files != null  and files != ''"> and files = #{files}</if>
             <if test="description != null  and description != ''"> and description = #{description}</if>
-            <if test="isOverdue != null  and isOverdue != ''"> and is_overdue = #{isOverdue}</if>
             <if test="params.beginDeadline != null and params.beginDeadline != '' and params.endDeadline != null and params.endDeadline != ''"> and deadline between #{params.beginDeadline} and #{params.endDeadline}</if>
             <if test="params.beginCreateTime != null and params.beginCreateTime != '' and params.endCreateTime != null and params.endCreateTime != ''"> and create_time between #{params.beginCreateTime} and #{params.endCreateTime}</if>
             <if test="createBy != null  and createBy != ''"> and create_by = #{createBy}</if>
@@ -54,13 +48,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="customerName != null and customerName != ''">customer_name,</if>
             <if test="takeName != null and takeName != ''">take_name,</if>
-            <if test="orderType != null and orderType != ''">order_type,</if>
+            <if test="orderTypeId != null and orderTypeId != ''">order_type_id,</if>
             <if test="status != null and status != ''">status,</if>
             <if test="amount != null">amount,</if>
-            <if test="images != null">images,</if>
-            <if test="files != null">files,</if>
             <if test="description != null and description != ''">description,</if>
-            <if test="isOverdue != null and isOverdue != ''">is_overdue,</if>
             <if test="isDelete != null and isDelete != ''">is_delete,</if>
             <if test="deadline != null">deadline,</if>
             <if test="createTime != null">create_time,</if>
@@ -74,10 +65,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="orderType != null and orderType != ''">#{orderType},</if>
             <if test="status != null and status != ''">#{status},</if>
             <if test="amount != null">#{amount},</if>
-            <if test="images != null">#{images},</if>
-            <if test="files != null">#{files},</if>
             <if test="description != null and description != ''">#{description},</if>
-            <if test="isOverdue != null and isOverdue != ''">#{isOverdue},</if>
             <if test="isDelete != null and isDelete != ''">#{isDelete},</if>
             <if test="deadline != null">#{deadline},</if>
             <if test="createTime != null">#{createTime},</if>
@@ -92,13 +80,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <trim prefix="SET" suffixOverrides=",">
             <if test="customerName != null and customerName != ''">customer_name = #{customerName},</if>
             <if test="takeName != null and takeName != ''">take_name = #{takeName},</if>
-            <if test="orderType != null and orderType != ''">order_type = #{orderType},</if>
+            <if test="orderTypeId != null and orderTypeId != ''">order_type_id = #{orderTypeId},</if>
             <if test="status != null and status != ''">status = #{status},</if>
             <if test="amount != null">amount = #{amount},</if>
-            <if test="images != null">images = #{images},</if>
-            <if test="files != null">files = #{files},</if>
             <if test="description != null and description != ''">description = #{description},</if>
-            <if test="isOverdue != null and isOverdue != ''">is_overdue = #{isOverdue},</if>
             <if test="isDelete != null and isDelete != ''">is_delete = #{isDelete},</if>
             <if test="deadline != null">deadline = #{deadline},</if>
             <if test="createTime != null">create_time = #{createTime},</if>
