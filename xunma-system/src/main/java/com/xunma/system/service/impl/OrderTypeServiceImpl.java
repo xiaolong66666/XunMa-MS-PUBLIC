@@ -5,7 +5,6 @@ import java.util.List;
 import com.xunma.common.core.domain.AjaxResult;
 import com.xunma.common.utils.DateUtils;
 import com.xunma.common.utils.SecurityUtils;
-import com.xunma.common.utils.uuid.IdUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.xunma.system.mapper.OrderTypeMapper;

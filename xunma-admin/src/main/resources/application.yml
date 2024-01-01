@@ -46,6 +46,12 @@ user:
 
 # Spring配置
 spring:
+  rabbitmq:
+    host: 192.168.92.222
+    port: 5673
+    username: guest
+    password: guest
+    publisher-confirm-type: correlated
   mail:
     host: smtp.qq.com
     username: 2636822826@qq.com
