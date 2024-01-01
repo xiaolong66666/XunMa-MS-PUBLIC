@@ -342,9 +342,6 @@ export default {
         orderTypeId: [
           { required: true, message: "订单类型不能为空", trigger: "change" }
         ],
-        status: [
-          { required: true, message: "状态不能为空", trigger: "change" }
-        ],
         amount: [
           { required: true, message: "金额不能为空", trigger: "blur" }
         ],

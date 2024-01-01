@@ -3,6 +3,7 @@ package com.xunma.system.service.impl;
 import java.util.List;
 
 import com.xunma.common.core.domain.AjaxResult;
+import com.xunma.common.mail.MailServiceUtil;
 import com.xunma.common.utils.DateUtils;
 import com.xunma.common.utils.SecurityUtils;
 import com.xunma.common.utils.minio.MinioUtils;
@@ -31,6 +32,9 @@ public class XmOrderServiceImpl implements IXmOrderService
     private XmOrderMapper xmOrderMapper;
     @Autowired
     private IResourceService resourceService;
+
+    @Autowired
+    private MailServiceUtil mailServiceUtil;
     /**
      * 查询订单
      * 
@@ -77,6 +81,9 @@ public class XmOrderServiceImpl implements IXmOrderService
         //保存上传资源
         saveResources(xmOrder);
         log.info("订单添加成功，订单信息：{}",xmOrder);
+        //向所有员工发送邮件通知
+//        mailServiceUtil.seedMessage("2636822826@qq.com");
+
         return AjaxResult.success("订单添加成功");
     }
 

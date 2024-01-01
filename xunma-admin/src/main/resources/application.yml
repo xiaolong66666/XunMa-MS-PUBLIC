@@ -46,6 +46,10 @@ user:
 
 # Spring配置
 spring:
+  mail:
+    host: smtp.qq.com
+    username: 2636822826@qq.com
+    password: btszszwafwqpebdd
   application:
     name: xunma-management
   # 资源信息
