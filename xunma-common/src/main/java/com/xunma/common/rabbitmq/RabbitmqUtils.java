@@ -1,11 +1,8 @@
 package com.xunma.common.rabbitmq;
-
 import org.springframework.amqp.core.MessageDeliveryMode;
 import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-
 public class RabbitmqUtils {
-
 
     /**
      * 发送延迟消息
