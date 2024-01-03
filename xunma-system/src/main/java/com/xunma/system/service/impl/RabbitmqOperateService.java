@@ -58,7 +58,7 @@ public class RabbitmqOperateService {
         }
         if (code.equals(CommonConstants.DELAY_CHANGE_ORDER_STATUS_TASK)){
             //修改订单状态
-//            xmOrderMapper.updateXmOrderStatus(Long.valueOf(jsonStr));
+            xmOrderMapper.updateXmOrderStatus(Long.valueOf(jsonStr));
         }
 
     }
