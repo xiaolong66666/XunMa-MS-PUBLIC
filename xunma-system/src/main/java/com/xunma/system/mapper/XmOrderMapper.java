@@ -59,4 +59,7 @@ public interface XmOrderMapper
      * @return 结果
      */
     public int deleteXmOrderByIds(Long[] ids);
+
+    //修改订单状态
+    public int updateXmOrderStatus(Long id);
 }

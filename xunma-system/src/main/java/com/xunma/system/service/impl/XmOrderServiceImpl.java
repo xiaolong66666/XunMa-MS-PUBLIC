@@ -7,14 +7,11 @@ import com.xunma.common.constant.CommonConstants;
 import com.xunma.common.core.domain.AjaxResult;
 import com.xunma.common.core.domain.entity.SysUser;
 import com.xunma.common.enums.TimeType;
-import com.xunma.common.mail.MailServiceUtil;
-import com.xunma.common.rabbitmq.RabbitmqService;
 import com.xunma.common.utils.DateUtils;
 import com.xunma.common.utils.SecurityUtils;
 import com.xunma.common.utils.minio.MinioUtils;
 import com.xunma.system.domain.Resource;
 import com.xunma.system.domain.dto.XmOrderDto;
-import com.xunma.system.mapper.SysUserMapper;
 import com.xunma.system.service.IResourceService;
 import com.xunma.system.service.ISysUserService;
 import lombok.extern.slf4j.Slf4j;
@@ -89,9 +86,10 @@ public class XmOrderServiceImpl implements IXmOrderService
         //保存上传资源
         saveResources(xmOrder);
         log.info("订单添加成功，订单信息：{}",xmOrder);
+        //发送延迟消息,2天后自动回收订单
+//        rabbitmqService.sendDeLayMessage(CommonConstants.DELAY_CHANGE_ORDER_STATUS_TASK,xmOrder.getId(),2,TimeType.MINUTE);
         //向所有员工异步发送邮件通知
-        String jsonStr = JSONUtil.toJsonStr(sysUserService.selectUserList(new SysUser()));
-        rabbitmqService.sendDeLayMessage(CommonConstants.SEND_EMAIL_TASK,jsonStr,0,TimeType.MILLISECOND);
+        rabbitmqService.sendDeLayMessage(CommonConstants.SEND_EMAIL_TASK,"",0,TimeType.MILLISECOND);
         return AjaxResult.success("订单添加成功");
     }
 
