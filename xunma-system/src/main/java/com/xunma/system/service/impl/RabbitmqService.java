@@ -19,9 +19,9 @@ public class RabbitmqService {
     private final ObjectMapper objectMapper;
 
 
-    public void sendDeLayMessage(String code, Object message, Integer millisecond, TimeType timeType){
+    public void sendDeLayMessage(String code, String message, Integer millisecond, TimeType timeType){
         try {
-            Map<String,Object> map = new HashMap<>();
+            Map<String,String> map = new HashMap<>();
             map.put(CommonConstants.RABBITMQ_CODE,code);
             map.put(CommonConstants.RABBITMQ_MESSAGE,message);
             RabbitmqUtils.sendDelayMessage(rabbitTemplate,millisecond*timeType.getMillisecond(),objectMapper.writeValueAsString(map),System.currentTimeMillis());

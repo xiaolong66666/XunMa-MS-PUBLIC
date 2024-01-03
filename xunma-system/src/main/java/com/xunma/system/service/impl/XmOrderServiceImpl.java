@@ -9,6 +9,7 @@ import com.xunma.common.core.domain.entity.SysUser;
 import com.xunma.common.enums.TimeType;
 import com.xunma.common.utils.DateUtils;
 import com.xunma.common.utils.SecurityUtils;
+import com.xunma.common.utils.StringUtils;
 import com.xunma.common.utils.minio.MinioUtils;
 import com.xunma.system.domain.Resource;
 import com.xunma.system.domain.dto.XmOrderDto;
@@ -87,7 +88,7 @@ public class XmOrderServiceImpl implements IXmOrderService
         saveResources(xmOrder);
         log.info("订单添加成功，订单信息：{}",xmOrder);
         //发送延迟消息,2天后自动回收订单
-//        rabbitmqService.sendDeLayMessage(CommonConstants.DELAY_CHANGE_ORDER_STATUS_TASK,xmOrder.getId(),2,TimeType.MINUTE);
+        rabbitmqService.sendDeLayMessage(CommonConstants.DELAY_CHANGE_ORDER_STATUS_TASK, String.valueOf(xmOrder.getId()),30,TimeType.SECOND);
         //向所有员工异步发送邮件通知
         rabbitmqService.sendDeLayMessage(CommonConstants.SEND_EMAIL_TASK,"",0,TimeType.MILLISECOND);
         return AjaxResult.success("订单添加成功");
@@ -96,6 +97,10 @@ public class XmOrderServiceImpl implements IXmOrderService
     private void saveResources(XmOrder xmOrder) {
         //获取订单id
         Long orderId = xmOrder.getId();
+        //校验资源是否为空
+        if (StringUtils.isEmpty(xmOrder.getFiles())){
+            return;
+        }
         String[] urls = xmOrder.getFiles().split(",");
         for (String url : urls) {
             Resource resource = new Resource();
