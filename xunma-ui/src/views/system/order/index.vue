@@ -196,7 +196,6 @@
     <el-dialog
       title="订单详细描述"
       :visible.sync="centerDialogVisible"
-      width="80%"
       center>
       <span>{{showText}}</span>
       <span slot="footer" class="dialog-footer">
