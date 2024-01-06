@@ -88,7 +88,8 @@ public class XmOrderServiceImpl implements IXmOrderService
         saveResources(xmOrder);
         log.info("订单添加成功，订单信息：{}",xmOrder);
         //发送延迟消息,2天后自动回收订单
-        rabbitmqService.sendDeLayMessage(CommonConstants.DELAY_CHANGE_ORDER_STATUS_TASK, String.valueOf(xmOrder.getId()),30,TimeType.SECOND);
+        log.info("订单已开始定时回收，id：{}",xmOrder.getId());
+        rabbitmqService.sendDeLayMessage(CommonConstants.DELAY_CHANGE_ORDER_STATUS_TASK, String.valueOf(xmOrder.getId()),2,TimeType.DAY);
         //向所有员工异步发送邮件通知
         rabbitmqService.sendDeLayMessage(CommonConstants.SEND_EMAIL_TASK,"",0,TimeType.MILLISECOND);
         return AjaxResult.success("订单添加成功");

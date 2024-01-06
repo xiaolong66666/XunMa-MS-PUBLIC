@@ -194,6 +194,7 @@ export default {
     /** 查询服务器信息 */
     getList() {
       getServer().then(response => {
+        //如果没有权限，则跳转页面
         this.server = response.data;
         this.$modal.closeLoading();
       });

@@ -5,9 +5,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbitmq.client.Channel;
 import com.xunma.common.constant.CommonConstants;
-import com.xunma.common.core.domain.entity.SysUser;
 import com.xunma.system.mapper.XmOrderMapper;
-import com.xunma.system.service.IXmOrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitHandler;
@@ -19,7 +17,6 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 
 @Component
@@ -58,7 +55,12 @@ public class RabbitmqOperateService {
         }
         if (code.equals(CommonConstants.DELAY_CHANGE_ORDER_STATUS_TASK)){
             //修改订单状态
-            xmOrderMapper.updateXmOrderStatus(Long.valueOf(jsonStr));
+            int i = xmOrderMapper.updateXmOrderStatus(Long.valueOf(jsonStr));
+            if (i==0){
+                log.error("修改订单状态失败，订单id："+jsonStr);
+            }else {
+                log.info("修改订单状态成功，订单id："+jsonStr);
+            }
         }
 
     }
