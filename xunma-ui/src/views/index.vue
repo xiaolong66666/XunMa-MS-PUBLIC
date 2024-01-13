@@ -74,7 +74,7 @@
         </el-card>
       </el-col>
 
-      <el-col :span="24" class="card-box">
+      <el-col :span="24" class="card-box" v-if="checkRole(['admin'])">
         <el-card>
           <div slot="header">
             <span><i class="el-icon-monitor"></i> 服务器信息</span>
@@ -177,7 +177,7 @@
 
 <script>
 import { getServer } from "@/api/monitor/server";
-
+import { checkPermi, checkRole } from "@/utils/permission"; // 权限判断函数
 export default {
   name: "Server",
   data() {
@@ -191,6 +191,9 @@ export default {
     this.openLoading();
   },
   methods: {
+    //权限校验
+    checkPermi,
+    checkRole,
     /** 查询服务器信息 */
     getList() {
       getServer().then(response => {

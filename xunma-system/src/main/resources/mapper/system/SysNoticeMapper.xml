@@ -39,7 +39,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 			<if test="createBy != null and createBy != ''">
 				AND create_by like concat('%', #{createBy}, '%')
 			</if>
-		</where>
+		</where> order by create_time desc
     </select>
     
     <insert id="insertNotice" parameterType="SysNotice">

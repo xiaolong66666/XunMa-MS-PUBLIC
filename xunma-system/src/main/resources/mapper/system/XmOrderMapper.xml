@@ -108,7 +108,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where id = #{id}
     </update>
     <update id="updateXmOrderStatus">
-        update xm_order set status = '3' where id = #{id}
+        update xm_order set status = '4' where id = #{id} and status != '3'
     </update>
 
     <delete id="deleteXmOrderById" parameterType="Long">
